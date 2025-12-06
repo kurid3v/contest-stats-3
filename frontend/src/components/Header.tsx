@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { GraduationCap } from 'lucide-react'
 import { Button } from './Button';
 
@@ -18,10 +17,7 @@ export const Header: React.FC<HeaderProps> = ({ selectedClass, onSelectClass }) 
   const classes = [9, 10, 11, 12];
 
   return (
-    <motion.header
-      initial={{ y: -100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.3 }}
+    <header
       className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm"
     >
       <div className="max-w-7xl mx-auto px-6 py-4">
@@ -56,6 +52,6 @@ export const Header: React.FC<HeaderProps> = ({ selectedClass, onSelectClass }) 
           </div>
         </div>
       </div>
-    </motion.header>
+    </header>
   );
 };
