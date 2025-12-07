@@ -80,6 +80,17 @@ python init_db.py
 # Run server (should print "Application startup complete" at http://0.0.0.0:8000)
 python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
+In the backend root folder (where main.py is located), create a file named:
+
+```.env```
+
+
+Add the following content:
+
+```ADMIN_PASSWORD=your_admin_password```
+
+
+Replace your_admin_password with your desired password.
 
 **Backend running at**: `http://localhost:8000`
 **API Docs**: `http://localhost:8000/docs`
