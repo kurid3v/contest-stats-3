@@ -2,7 +2,8 @@
 PREHSG Contest Management Backend
 FastAPI + SQLModel for data management
 """
-
+from dotenv import load_dotenv
+load_dotenv()
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select
