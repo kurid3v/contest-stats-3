@@ -1,334 +1,410 @@
-# PREHSG Contest Hub Setup
+# PREHSG Contest Hub
 
-This file documents the complete setup and structure of the PREHSG Contest Hub application.
+Một ứng dụng web full-stack hiện đại để quản lý các cuộc thi PREHSG với các hoạt động quản trị an toàn, quản lý CRUD theo thời gian thực, và giao diện người dùng đẹp mắt.
 
-## Project Overview
+---
 
-Full-stack web application for managing PREHSG contests with:
-- Modern React + Vite frontend
-- FastAPI backend with SQLModel ORM
-- SQLite database
-- Complete CRUD admin panel
-- Beautiful UI with Tailwind CSS + shadcn/ui
+## Mục lục
 
-## Directory Structure
+- [Khởi động nhanh](#khởi-động-nhanh)
+- [Công nghệ](#công-nghệ)
+- [Cấu trúc dự án](#cấu-trúc-dự-án)
+- [Kiến trúc hệ thống](#kiến-trúc-hệ-thống)
+- [API Endpoints](#api-endpoints)
+- [Bảng điều khiển quản trị](#bảng-điều-khiển-quản-trị)
+- [Hướng dẫn sử dụng](#hướng-dẫn-sử-dụng)
+- [Hướng dẫn cài đặt](#hướng-dẫn-cài-đặt)
 
-```
-contest-stats-3/
-├── frontend/                          # React Vite application
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── Header.tsx             # Main navigation
-│   │   │   ├── Sidebar.tsx            # Year accordion sidebar
-│   │   │   ├── ContestCard.tsx        # Contest display card
-│   │   │   ├── AdminPanel.tsx         # Admin CRUD interface
-│   │   │   └── Button.tsx             # Custom button component
-│   │   ├── pages/
-│   │   │   ├── HomePage.tsx           # Main page
-│   │   │   └── AdminPage.tsx          # Admin page
-│   │   ├── lib/
-│   │   │   └── api.ts                 # Axios API client
-│   │   ├── App.tsx                    # Router setup
-│   │   ├── main.tsx                   # Entry point
-│   │   └── index.css                  # Global styles
-│   ├── package.json                   # Dependencies
-│   ├── vite.config.ts                 # Vite config
-│   ├── tailwind.config.js             # Tailwind config
-│   ├── postcss.config.js              # PostCSS config
-│   ├── tsconfig.json                  # TypeScript config
-│   ├── index.html                     # HTML template
-│   └── README.md
-│
-├── backend/                           # FastAPI application
-│   ├── main.py                        # FastAPI app + routes
-│   ├── database.py                    # DB configuration
-│   ├── models.py                      # SQLModel definitions
-│   ├── init_db.py                     # DB initialization
-│   ├── routers/
-│   │   ├── __init__.py
-│   │   └── contests.py                # Contest CRUD routes
-│   ├── requirements.txt               # Python dependencies
-│   ├── contest_hub.db                 # SQLite database (created on first run)
-│   └── README.md
-│
-└── README.md                          # This file
-```
+---
 
-## Installation & Running
+## Khởi động nhanh
 
-### Backend Setup
+### Yêu cầu
+- **Node.js 18+** - https://nodejs.org/
+- **Python 3.9+** - https://www.python.org/
 
+### Cài đặt tự động (Windows)
 ```bash
-# Navigate to backend
+setup.bat
+```
+
+### Cài đặt thủ công
+
+**Backend** (Terminal 1):
+```bash
 cd backend
-
-# Create virtual environment
 python -m venv venv
-
-# Activate virtual environment
-# Windows:
-venv\Scripts\activate
-# macOS/Linux:
-source venv/bin/activate
-
-# Install dependencies
+venv\Scripts\activate  # Windows
+# source venv/bin/activate  # macOS/Linux
 pip install -r requirements.txt
-
-# Initialize database with sample data
 python init_db.py
-
-# Run server (should print "Application startup complete" at http://0.0.0.0:8000)
-python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
+python -m uvicorn main:app --reload
 ```
 
-**Backend running at**: `http://localhost:8000`
-**API Docs**: `http://localhost:8000/docs`
-
-### Frontend Setup
-
+**Frontend** (Terminal 2):
 ```bash
-# Navigate to frontend (in new terminal)
 cd frontend
-
-# Install dependencies
 npm install
-
-# Start dev server
 npm run dev
 ```
 
-**Frontend running at**: `http://localhost:5173`
+**Truy cập ứng dụng:**
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:8000
+- API Docs: http://localhost:8000/docs
+- Bảng điều khiển quản trị: http://localhost:5173/a9F2kQ7mB41xZp8tR0Ls/ (Mật khẩu: `chtcoder@prehsg`)
 
-## Component Overview
+---
 
-### Frontend Components
+## Công nghệ
 
-#### Header.tsx
-- Main navigation bar
-- Class selection buttons (9, 10, 11, 12)
-- Admin button
-- Sticky positioning
-- Smooth animations
+| Lớp | Công nghệ | Phiên bản | Mục đích |
+|-------|-----------|---------|---------|
+| **Frontend** | React | 18.2.0 | Framework UI |
+| | TypeScript | 5.2.2 | Kiểm tra kiểu |
+| | Vite | 5.0 | Build tool |
+| | Tailwind CSS | 3.3.6 | Styling |
+| | React Router | 6.18 | Định tuyến |
+| | Axios | 1.6.2 | HTTP client |
+| | Radix UI | Latest | Accessible components |
+| | Lucide React | 0.555 | Icons |
+| **Backend** | FastAPI | 0.104.1 | Web framework |
+| | SQLModel | 0.0.14 | ORM + Type hints |
+| | SQLAlchemy | 2.0.23 | Database layer |
+| | Uvicorn | 0.24.0 | ASGI server |
+| | SQLite | Built-in | Cơ sở dữ liệu |
+| | python-dotenv | 1.1.1 | Cấu hình |
 
-#### Sidebar.tsx
-- Year-based accordion (Radix UI)
-- Dynamically populated from API
-- Filters contests by selected class
-- Shows Pre #1, Pre #2, Pre #3 for each year
+**Điểm nổi bật của kiến trúc:**
+- REST API với nested resources
+- Xác thực dựa trên token với hết hạn
+- Caching trong bộ nhớ với cache invalidation
+- Indexing cơ sở dữ liệu (class_level, year, contest_id, item_number)
+- GZIP compression middleware
+- Cascade delete relationships
 
-#### ContestCard.tsx
-- Individual contest display
-- Shows contest name and pre number
-- Contest and Solution buttons
-- Hover animations with Framer Motion
-- Smooth transitions
+---
 
-#### AdminPanel.tsx
-- Complete CRUD interface
-- Modal dialog for add/edit
-- Table view of all contests
-- Delete with confirmation
-- Form validation
-- Error handling
-
-#### Button.tsx
-- Custom button component (shadcn/ui pattern)
-- Multiple variants: default, outline, ghost, destructive
-- Multiple sizes: default, sm, lg
-
-### Frontend Pages
-
-#### HomePage.tsx
-- Main page with class selection
-- Displays sidebar when class is selected
-- Fetches contests from API
-- Responsive layout
-
-#### AdminPage.tsx
-- Dedicated admin interface
-- Back button to home
-- Includes AdminPanel component
-
-### Backend Routes
-
-#### GET /contests
-Returns all contests, ordered by year (descending) and pre number.
-
-Response:
-```json
-[
-  {
-    "id": 1,
-    "class_level": 9,
-    "year": 2025,
-    "pre_number": 1,
-    "contest_url": "https://...",
-    "solution_url": "https://..."
-  }
-]
-```
-
-#### POST /contests
-Creates new contest. Returns created contest with ID.
-
-Request body:
-```json
-{
-  "class_level": 9,
-  "year": 2025,
-  "pre_number": 1,
-  "contest_url": "https://example.com/contest",
-  "solution_url": "https://example.com/solution"
-}
-```
-
-#### PUT /contests/{id}
-Updates existing contest.
-
-#### DELETE /contests/{id}
-Deletes contest (returns 204 No Content).
-
-#### GET /contests/class/{class_level}
-Gets contests for specific class (9-12).
-
-#### GET /contests/year/{year}
-Gets contests for specific year.
-
-#### GET /health
-Health check endpoint.
-
-#### GET /
-API information endpoint.
-
-## API Client
-
-The frontend uses axios (`src/lib/api.ts`):
-
-```typescript
-import { api } from '../lib/api';
-
-// GET
-const response = await api.get('/contests');
-
-// POST
-await api.post('/contests', contestData);
-
-// PUT
-await api.put(`/contests/${id}`, updatedData);
-
-// DELETE
-await api.delete(`/contests/${id}`);
-```
-
-## Database
-
-SQLite database with SQLModel ORM. Schema:
+## Cấu trúc dự án
 
 ```
-Table: contests
-- id (Integer, Primary Key)
-- class_level (Integer, 9-12)
-- year (Integer, 2000-2100)
-- pre_number (Integer, 1-3)
-- contest_url (String)
-- solution_url (String)
+contest-stats-3/
+├── frontend/                          # Ứng dụng React + Vite
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── Header.tsx             # Header điều hướng
+│   │   │   ├── Sidebar.tsx            # Sidebar chọn năm
+│   │   │   ├── ContestCard.tsx        # Thẻ hiển thị cuộc thi
+│   │   │   ├── SolutionModal.tsx      # Modal popup giải pháp
+│   │   │   ├── Button.tsx             # Custom button component
+│   │   │   └── AdminPanel.tsx         # Interface CRUD quản trị
+│   │   ├── pages/
+│   │   │   ├── HomePage.tsx           # Trang liệt kê cuộc thi
+│   │   │   └── AdminInputPage.tsx     # Trang quản lý quản trị
+│   │   ├── lib/
+│   │   │   └── api.ts                 # Axios HTTP client
+│   │   ├── App.tsx                    # Router + routes
+│   │   ├── main.tsx                   # Entry point
+│   │   └── index.css                  # Global styles
+│   ├── package.json
+│   ├── vite.config.ts
+│   ├── tailwind.config.js
+│   ├── tsconfig.json
+│   └── index.html
+│
+├── backend/                           # Ứng dụng FastAPI
+│   ├── main.py                        # FastAPI setup + middleware
+│   ├── models.py                      # SQLModel ORM definitions
+│   ├── database.py                    # Cấu hình DB
+│   ├── cache.py                       # Hệ thống cache trong bộ nhớ
+│   ├── init_db.py                     # Khởi tạo cơ sở dữ liệu
+│   ├── routers/
+│   │   ├── contests.py                # Contest/Solution CRUD
+│   │   └── auth.py                    # Xác thực (password → token)
+│   ├── requirements.txt
+│   ├── __pycache__/
+│   └── contest_hub.db                 # Cơ sở dữ liệu SQLite
+│
+├── README.md                          # File này
+├── setup.bat                          # Script cài đặt Windows
+├── setup.sh                           # Script cài đặt Linux/macOS
+└── test_services.py                   # Tiện ích kiểm tra dịch vụ
 ```
 
-Sample data is loaded via `init_db.py` with contests for:
-- Classes 9, 10, 11, 12
-- Years 2024, 2025
-- Pre #1, Pre #2, Pre #3 for each class/year
+---
 
-## Configuration Files
+## Kiến trúc hệ thống
 
-### Frontend
+### Luồng cấp cao
 
-**vite.config.ts**: Vite build configuration with API proxy
-- Proxy `/api` requests to `http://localhost:8000`
-- Development server on port 5173
+```
+┌─────────────────────────────────────────────────┐
+│    FRONTEND (React tại localhost:5173)          │
+│  ┌──────────────────────────────────────────┐   │
+│  │ Header + Sidebar + Hiển thị ContestCard  │   │
+│  │ Hoặc AdminInputPage (Bảo vệ bằng pwd)   │   │
+│  └──────────────────────────────────────────┘   │
+└─────────────────┬───────────────────────────────┘
+                  │
+                  │ Axios HTTP Client
+                  │ (api.ts với xác thực token)
+                  │
+                  ▼
+┌─────────────────────────────────────────────────┐
+│   BACKEND (FastAPI tại localhost:8000)          │
+│  ┌──────────────────────────────────────────┐   │
+│  │ routers/contests.py (CRUD endpoints)     │   │
+│  │ routers/auth.py (Password → Token)       │   │
+│  │ Middleware: CORS, GZIPMiddleware         │   │
+│  └──────────────────────────────────────────┘   │
+└─────────────────┬───────────────────────────────┘
+                  │
+                  │ SQLModel ORM
+                  │
+                  ▼
+┌─────────────────────────────────────────────────┐
+│   DATABASE (SQLite - contest_hub.db)            │
+│  ┌──────────────────────────────────────────┐   │
+│  │ Bảng Contest (id, class_level, year...)  │   │
+│  │ Bảng Solution (id, contest_id, item...)   │   │
+│  │ Indexes: idx_class_year, idx_year, etc.  │   │
+│  └──────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────┘
+```
 
-**tailwind.config.js**: Tailwind CSS configuration
-- Inter font
-- Custom background color (#f9fafb)
-- Animation keyframes for accordion
-- Responsive breakpoints
+### Chu kỳ Request/Response
 
-**tsconfig.json**: TypeScript configuration
-- ES2020 target
-- Strict mode enabled
-- JSX support
+1. **Hành động người dùng** → Click nút trong React component
+2. **Gọi API** → Yêu cầu Axios với token xác thực (nếu hoạt động quản trị)
+3. **Định tuyến** → FastAPI router khớp endpoint
+4. **Xử lý** → Logic nghiệp vụ + hoạt động cơ sở dữ liệu
+5. **Phản hồi** → Dữ liệu JSON trả lại frontend
+6. **Re-render** → React component cập nhật với dữ liệu mới
 
-**postcss.config.js**: PostCSS with Tailwind and Autoprefixer
+### Quan hệ Components
 
-### Backend
+```
+App.tsx (Router)
+├── HomePage.tsx
+│   ├── Header.tsx (Chọn lớp học)
+│   └── Sidebar.tsx (Accordion năm)
+│       └── ContestCard.tsx (Hiển thị cuộc thi)
+│           └── SolutionModal.tsx (Popup với giải pháp)
+│
+└── AdminInputPage.tsx (Secret URL: /a9F2kQ7mB41xZp8tR0Ls/)
+    └── AdminPanel.tsx (Login + Full CRUD)
+        ├── Quản lý Cuộc thi (Tạo/Sửa/Xóa)
+        └── Quản lý Giải pháp (Thêm/Xóa giải pháp)
+```
 
-**main.py**: FastAPI application
-- CORS middleware for development
-- Routers included
-- Lifespan context for startup/shutdown
-- Health check and info endpoints
+---
 
-**database.py**: Database configuration
-- SQLite connection
-- Session dependency
-- Table creation
+## API Endpoints
 
-**models.py**: SQLModel definitions
-- ContestBase: Base fields
-- Contest: Database model
-- ContestCreate: Request model
-- ContestUpdate: Update model
-- ContestRead: Response model
+### Public Endpoints
 
-## Styling & Design
+**Lấy tất cả cuộc thi**
+```
+GET /contests
+Response: List[ContestRead] với nested solutions
+Cache: Được bật (vô hiệu hóa khi mutations)
+```
 
-- **Font**: Inter (from Google Fonts)
-- **Framework**: TailwindCSS
-- **Components**: shadcn/ui patterns
-- **Animations**: Framer Motion
-- **Background**: #f9fafb (light gray)
-- **Primary**: Blue (#3b82f6)
-- **Spacing**: Large (gap-6, p-6)
-- **Border Radius**: xl (0.75rem)
-- **Shadows**: md on cards, lg on hover
+### Admin Endpoints (Yêu cầu Token)
 
-## Animations
+**Xác thực**
+```
+POST /auth/login
+Body: { "password": "chtcoder@prehsg" }
+Response: { "access_token": "...", "token_type": "bearer" }
+```
 
-- Header slide down on load
-- Sidebar slide in from left
-- Contest cards fade in with slight upward movement
-- Hover effects with shadow increase
-- Dialog overlays with backdrop blur
-- Table rows animate on add/delete
+**Quản lý Cuộc thi**
+```
+POST /contests           # Tạo cuộc thi mới
+PUT /contests/{id}       # Cập nhật cuộc thi
+DELETE /contests/{id}    # Xóa cuộc thi (cascade xóa solutions)
+```
 
-## Development Features
+**Quản lý Giải pháp**
+```
+GET /contests/{id}/solutions           # Liệt kê giải pháp cho cuộc thi
+POST /contests/{id}/solutions          # Thêm giải pháp
+DELETE /contests/{id}/solutions/{id}   # Xóa giải pháp
+```
 
-### Frontend
-- ✅ Hot Module Replacement (HMR)
-- ✅ TypeScript strict mode
-- ✅ ESLint configured
-- ✅ Vite optimized builds
+### Quan hệ Cơ sở dữ liệu
 
-### Backend
-- ✅ Auto-reload with `--reload` flag
-- ✅ SQLAlchemy echo for SQL debugging (disabled by default)
-- ✅ Type hints throughout
-- ✅ Interactive API docs (Swagger)
+```
+Contest (1) ↔ (*) Solution
+├─ id (PK)           ├─ id (PK)
+├─ class_level       ├─ contest_id (FK) → CASCADE DELETE
+├─ year              ├─ item_number
+├─ pre_number        ├─ title
+├─ contest_url       └─ solution_url
+├─ solution_url      
+└─ solutions: List[Solution]
+```
 
-## Common Tasks
+---
 
-### Add a New Contest
+## Bảng điều khiển quản trị
 
-**Via Admin Panel**:
-1. Click "Admin" button
-2. Click "Add Contest"
-3. Fill form with class, year, pre number, URLs
-4. Click "Add"
+### Truy cập & Bảo mật
 
-**Via API**:
+**URL**: `http://localhost:5173/a9F2kQ7mB41xZp8tR0Ls/`
+
+**Các lớp bảo mật:**
+1. Đường dẫn URL bí mật (che giấu)
+2. Xác thực bằng mật khẩu (đăng nhập)
+3. Uỷ quyền API dựa trên token (hết hạn: 30 phút)
+4. Cache invalidation khi tất cả hoạt động ghi
+
+### Tính năng
+
+**Đăng nhập**
+- Nhập mật khẩu: `chtcoder@prehsg`
+- Nhận JWT token cho các lệnh gọi API
+- Token được lưu trữ tự động trong localStorage
+
+**Quản lý Cuộc thi**
+- ✅ Xem tất cả cuộc thi trong bảng
+- ✅ Tạo cuộc thi mới (class_level, năm, pre_number, URLs)
+- ✅ Chỉnh sửa cuộc thi hiện có
+- ✅ Xóa cuộc thi (xóa tất cả giải pháp liên quan)
+- ✅ Cập nhật theo thời gian thực
+
+**Quản lý Giải pháp**
+- ✅ Thêm giải pháp vào cuộc thi (item_number, tiêu đề, solution_url)
+- ✅ Xem giải pháp mỗi cuộc thi
+- ✅ Xóa giải pháp cụ thể
+- ✅ Cập nhật danh sách theo thời gian thực
+
+**Lưu trữ dữ liệu**
+- Tất cả thay đổi được lưu vào cơ sở dữ liệu SQLite
+- Quan hệ được duy trì với cascade deletes
+- Cơ sở dữ liệu được indexing để truy vấn nhanh
+
+---
+
+## Hướng dẫn sử dụng
+
+### Cho người dùng thông thường
+
+1. **Truy cập ứng dụng** tại http://localhost:5173
+2. **Chọn Lớp học** từ dropdown header
+3. **Xem Năm** trong sidebar bên trái
+4. **Click một Cuộc thi** để xem chi tiết
+5. **Click nút "Solution"** để xem giải pháp trong popup
+6. **Click liên kết giải pháp** để mở tài nguyên bên ngoài
+
+### Cho quản trị viên
+
+1. **Điều hướng đến Bảng điều khiển quản trị** tại http://localhost:5173/a9F2kQ7mB41xZp8tR0Ls/
+2. **Nhập Mật khẩu** `chtcoder@prehsg`
+3. **Quản lý Cuộc thi**:
+   - Điền biểu mẫu với lớp học, năm, pre-number, URLs
+   - Click "Add Contest" hoặc "Update" cho cuộc thi hiện có
+   - Click icon xóa để loại bỏ
+4. **Quản lý Giải pháp**:
+   - Chọn một cuộc thi từ bảng
+   - Thêm giải pháp với item number và URLs
+   - Click icon xóa để loại bỏ giải pháp
+5. **Tất cả Thay đổi Lưu ngay** vào cơ sở dữ liệu
+
+---
+
+## Hướng dẫn cài đặt
+
+### Tùy chọn 1: Windows (Tự động)
+
+```bash
+# Chạy script cài đặt
+setup.bat
+
+# Điều này sẽ:
+# 1. Tạo môi trường ảo Python
+# 2. Cài đặt dependencies backend
+# 3. Khởi tạo cơ sở dữ liệu với dữ liệu mẫu
+# 4. Cài đặt dependencies frontend
+# 5. Hiển thị hướng dẫn khởi động
+```
+
+### Tùy chọn 2: macOS/Linux
+
+```bash
+chmod +x setup.sh
+./setup.sh
+```
+
+### Tùy chọn 3: Cài đặt thủ công
+
+**Bước 1: Backend**
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # hoặc venv\Scripts\activate trên Windows
+pip install -r requirements.txt
+python init_db.py
+python -m uvicorn main:app --reload
+```
+
+**Bước 2: Frontend** (terminal mới)
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### Build cho Production
+
+**Backend:**
+```bash
+cd backend
+pip install -r requirements.txt
+python -m uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+**Frontend:**
+```bash
+cd frontend
+npm install
+npm run build  # Tạo folder dist/
+```
+
+---
+
+## Phát triển & Kiểm tra
+
+### Kiểm tra sức khỏe
+```bash
+curl http://localhost:8000/health
+# Response: {"status": "ok"}
+```
+
+### Tài liệu API
+- **Interactive Swagger UI**: http://localhost:8000/docs
+- **ReDoc Documentation**: http://localhost:8000/redoc
+
+### Yêu cầu mẫu
+
+**Lấy tất cả cuộc thi**
+```bash
+curl http://localhost:8000/contests | json_pp
+```
+
+**Đăng nhập (Lấy Token)**
+```bash
+curl -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"password": "chtcoder@prehsg"}'
+```
+
+**Tạo Cuộc thi** (yêu cầu token)
 ```bash
 curl -X POST http://localhost:8000/contests \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
     "class_level": 9,
     "year": 2025,
@@ -338,64 +414,70 @@ curl -X POST http://localhost:8000/contests \
   }'
 ```
 
-### Edit a Contest
+---
 
-Via Admin Panel: Click edit icon in table row
+## Tối ưu hóa hiệu suất
 
-### Delete a Contest
-
-Via Admin Panel: Click delete icon with confirmation
-
-### View API Documentation
-
-Visit `http://localhost:8000/docs` when backend is running.
-
-## Troubleshooting
-
-### Frontend won't load
-- Ensure backend is running on port 8000
-- Check that npm dependencies are installed: `npm install`
-- Clear browser cache or use incognito mode
-
-### Backend port already in use
-- Kill process on port 8000 or use different port:
-  ```bash
-  python -m uvicorn main:app --port 8001
-  ```
-
-### Database not initialized
-- Run `python init_db.py` to create tables and sample data
-
-### API calls failing
-- Check CORS configuration in `main.py`
-- Verify backend is running: `curl http://localhost:8000/health`
-- Check browser console for detailed error
-
-## Production Deployment
-
-### Frontend
-```bash
-npm run build
-# Deploy dist/ folder to Vercel, Netlify, or static host
-```
-
-### Backend
-```bash
-# Set DATABASE_URL environment variable
-export DATABASE_URL="postgresql://user:password@host/dbname"
-pip install gunicorn
-gunicorn main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker
-```
-
-## Next Steps
-
-1. ✅ Backend and Frontend setup complete
-2. ✅ CRUD operations working
-3. ✅ Beautiful UI with animations
-4. Consider: Authentication, database backup, monitoring
+1. **Caching trong bộ nhớ** - GET /contests được cache, vô hiệu hóa khi mutations
+2. **Indexing cơ sở dữ liệu** - Indexes trên class_level, year, contest_id, item_number
+3. **GZIP Compression** - Tất cả phản hồi API được nén
+4. **Connection Pooling** - Tái sử dụng kết nối cơ sở dữ liệu
+5. **Token Expiration** - Thời gian sống token 30 phút cho bảo mật
 
 ---
 
-**Setup Complete! 🎉**
+## Mô tả File
 
-Both frontend and backend are now ready to use. Open `http://localhost:5173` in your browser.
+### Các file Frontend chính
+
+| File | Mục đích |
+|------|---------|
+| `App.tsx` | Main router, định nghĩa routes bao gồm đường dẫn quản trị bí mật |
+| `HomePage.tsx` | Hiển thị cuộc thi với lọc class/năm |
+| `AdminInputPage.tsx` | Interface quản trị bảo vệ bằng mật khẩu |
+| `Header.tsx` | Dropdown chọn mức độ lớp |
+| `Sidebar.tsx` | Accordion năm với lọc cuộc thi |
+| `ContestCard.tsx` | Hiển thị cuộc thi riêng lẻ với nút giải pháp |
+| `SolutionModal.tsx` | Modal popup hiển thị giải pháp cho cuộc thi |
+| `lib/api.ts` | Axios client với xác thực token |
+
+### Các file Backend chính
+
+| File | Mục đích |
+|------|---------|
+| `main.py` | FastAPI app setup, middleware, lifespan |
+| `models.py` | SQLModel definitions (Contest, Solution) + indexes |
+| `database.py` | Cấu hình SQLite, connection pooling |
+| `cache.py` | Hệ thống cache trong bộ nhớ cho cuộc thi |
+| `init_db.py` | Khởi tạo cơ sở dữ liệu với dữ liệu mẫu |
+| `routers/contests.py` | CRUD endpoints cho cuộc thi & giải pháp |
+| `routers/auth.py` | Xác thực bằng mật khẩu, tạo token |
+
+---
+
+## Khắc phục sự cố
+
+**Backend không khởi động?**
+- Kiểm tra Python 3.9+ được cài đặt: `python --version`
+- Xác minh dependencies: `pip list | grep fastapi`
+- Kiểm tra port 8000 không được sử dụng: `lsof -i :8000` (macOS/Linux)
+
+**Frontend không khởi động?**
+- Kiểm tra Node 18+ được cài đặt: `node --version`
+- Xóa node_modules và cài đặt lại: `rm -rf node_modules && npm install`
+- Kiểm tra port 5173 không được sử dụng: `netstat -an | grep 5173` (Windows)
+
+**Vấn đề cơ sở dữ liệu?**
+- Xóa contest_hub.db và khởi tạo lại: `python init_db.py`
+- Kiểm tra venv được kích hoạt trước khi chạy lệnh
+
+**Bảng điều khiển quản trị không tải?**
+- Xác minh URL chính xác: `http://localhost:5173/a9F2kQ7mB41xZp8tR0Ls/`
+- Kiểm tra backend chạy trên cổng 8000
+- Kiểm tra mật khẩu chính xác: `chtcoder@prehsg`
+
+---
+
+## Giấy phép
+
+PREHSG Contest Hub - Được xây dựng để quản lý cuộc thi PREHSG.
