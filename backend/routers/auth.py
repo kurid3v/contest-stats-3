@@ -6,7 +6,9 @@ import secrets
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 # Admin password (set via environment variable in production)
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+# Default password for development: "chtcoder@prehsg"
+# In production, set ADMIN_PASSWORD environment variable
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "chtcoder@prehsg")
 
 # Simple in-memory token store (acceptable for dev; replace with DB or JWT in production)
 _valid_tokens: set[str] = set()
