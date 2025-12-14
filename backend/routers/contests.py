@@ -17,9 +17,9 @@ router = APIRouter(prefix="/contests", tags=["contests"])
 async def get_all_contests(session: Session = Depends(get_session)):
     """
     Get all contests
-    Returns all contests ordered by year (descending) and pre_number
+    Returns all contests ordered by year (descending) and contest_name
     """
-    statement = select(Contest).order_by(Contest.year.desc(), Contest.pre_number)
+    statement = select(Contest).order_by(Contest.year.desc(), Contest.contest_name)
     contests = session.exec(statement).all()
     return contests
 
@@ -45,7 +45,7 @@ async def create_contest(
     """
     Create a new contest
     """
-    db_contest = Contest.from_orm(contest)
+    db_contest = Contest.model_validate(contest)
     session.add(db_contest)
     session.commit()
     session.refresh(db_contest)
@@ -69,7 +69,7 @@ async def update_contest(
         )
     
     # Update fields
-    contest_data = contest_update.dict(exclude_unset=True)
+    contest_data = contest_update.model_dump(exclude_unset=True)
     for field, value in contest_data.items():
         setattr(db_contest, field, value)
     
@@ -100,19 +100,23 @@ async def delete_contest(
 
 @router.get("/class/{class_level}", response_model=List[ContestRead])
 async def get_contests_by_class(
-    class_level: int,
+    class_level: str,
     session: Session = Depends(get_session),
 ):
     """
-    Get all contests for a specific class level (9-12)
+    Get all contests for a specific class level (9, 10, 11, 12, or 'other')
     """
-    if class_level < 9 or class_level > 12:
+    allowed_levels = ["9", "10", "11", "12", "other"]
+    # Convert to string if it's a number
+    class_level_str = str(class_level) if class_level.isdigit() else class_level
+    if class_level_str not in allowed_levels:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Class level must be between 9 and 12",
+            detail=f"Class level must be one of {allowed_levels}",
         )
     
-    statement = select(Contest).where(Contest.class_level == class_level).order_by(Contest.year.desc(), Contest.pre_number)
+    # class_level is stored as string in database
+    statement = select(Contest).where(Contest.class_level == class_level_str).order_by(Contest.year.desc(), Contest.contest_name)
     contests = session.exec(statement).all()
     return contests
 
@@ -124,6 +128,6 @@ async def get_contests_by_year(
     """
     Get all contests for a specific year
     """
-    statement = select(Contest).where(Contest.year == year).order_by(Contest.class_level, Contest.pre_number)
+    statement = select(Contest).where(Contest.year == year).order_by(Contest.class_level, Contest.contest_name)
     contests = session.exec(statement).all()
     return contests
